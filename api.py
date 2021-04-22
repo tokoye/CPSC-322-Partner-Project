@@ -37,8 +37,8 @@ for track in tracks:
     if popularity == 0:
         continue #skip any track with 0 popularity, because I'm unsure if this is a default value 
     else:
-        name = track["track"]["name"]
-        track_data.append(name) # will be ignored but could but each track_data_obj should be identifiable
+        #name = track["track"]["name"]
+        #track_data.append(name) # will be ignored but could but each track_data_obj should be identifiable
         features_dict = sp.audio_features(track["track"]["id"]) #this  returns a features dictonary
         for key in features_dict[0]: #loop through and add only the attributes we want
             if key != "type" and key != "id" and key != "uri" and key != "track_href" and key != "analysis_url" and key != "time_signature" and key != "mode" and key != "key" and key != "loudness":
@@ -58,7 +58,7 @@ for track in tracks:
 
 print(len(track_data_objs))
 
-header = ['Track_name', 'danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'popularity']
+header = ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'popularity']
 
 tracks_mypy = MyPyTable(header, track_data_objs)
 tracks_mypy.save_to_file("tracks_data.txt")
