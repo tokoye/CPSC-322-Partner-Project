@@ -9,8 +9,8 @@ import numpy as np
 import importlib
 import copy
 import random
-import mysklearn.mypytable
-importlib.reload(mysklearn.mypytable)
+# import mysklearn.mypytable
+# importlib.reload(mysklearn.mypytable)
 from mysklearn.mypytable import MyPyTable
 from tabulate import tabulate
 
@@ -527,3 +527,46 @@ def compute_partition_stats(instances, class_index):
                 stats_array.append([key, stats[key], len(instances)])
         
     return stats_array
+
+
+def percent_to_rating(val):
+    if val <= 0.1:
+        return "0.1"
+    elif val <= 0.2:
+        return "0.2"
+    elif val <= 0.3:
+        return "0.3"
+    elif val <= 0.4:
+        return "0.4"
+    elif val <= 0.5:
+        return "0.5"
+    elif val <= 0.6:
+        return "0.6"
+    elif val <= 0.7:
+        return "0.7"
+    elif val <= 0.8:
+        return "0.8"
+    elif val <= 0.9:
+        return "0.9"
+    return "1"
+
+def pop_rating(val):
+    if val <= 10:
+        return "10"
+    elif val <= 20:
+        return "9"
+    elif val <= 30:
+        return "8"
+    elif val <= 40:
+        return "7"
+    elif val <= 50:
+        return "6"
+    elif val <= 60:
+        return "5"
+    elif val <= 70:
+        return "4"
+    elif val <= 80:
+        return "3"
+    elif val <= 90:
+        return "2"
+    return "1"
