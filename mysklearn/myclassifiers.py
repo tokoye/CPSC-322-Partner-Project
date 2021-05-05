@@ -517,8 +517,6 @@ class MyRandomForestClassifier:
         self.X_train = None 
         self.y_train = None
         self.trees = None
-        self.y_pred = None
-        self.accuracy = None
 
     def fit(self, X_train, y_train, N, M, F):
         """
@@ -534,12 +532,12 @@ class MyRandomForestClassifier:
         """
         self.X_train = X_train
         self.y_train = y_train
-        self.trees, self.y_pred, self.accuracy = myutils.bagging(X_train, y_train, N, M, F)
+        self.trees = myutils.bagging(X_train, y_train, N, M, F)
 
         
         pass # TODO: fix this
         
-    def predict(self):
+    def predict(self, X_test):
         """Makes predictions for test instances in X_test.
 
         Args:
@@ -549,5 +547,5 @@ class MyRandomForestClassifier:
         Returns:
             y_predicted(list of obj): The predicted target y values (parallel to X_test)
         """
-
-        return self.y_pred # TODO: fix this
+        y_pred = myutils.random_forest_predict(X_test, self.trees)
+        return y_pred # TODO: fix this

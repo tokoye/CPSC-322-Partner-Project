@@ -9,14 +9,12 @@ import numpy as np
 import importlib
 import copy
 import random
+import os
 # import mysklearn.mypytable
 # importlib.reload(mysklearn.mypytable)
 from mysklearn.mypytable import MyPyTable
 from tabulate import tabulate
 
-import mysklearn.myutils
-importlib.reload(mysklearn.myutils)
-import mysklearn.myutils as utils
 
 # # uncomment once you paste your mypytable.py into mysklearn package
 
@@ -36,7 +34,7 @@ def table_setUp(file_name):
     file_path = os.path.join("input_data", file_name)
 
     # Inputs data from file into the table 
-    table = mypytable.MyPyTable().load_from_file(file_path)
+    table = MyPyTable().load_from_file(file_path)
 
     return table
 
@@ -652,6 +650,7 @@ def compute_corr_coef(x, y):
     r = sum([(x[i] - mean_x) * (y[i] - mean_y) for i in range(len(x))]) / sum([((x[i] - mean_x)**2) * ((y[i] - mean_y)**2) for i in range(len(x))])
     return r
 
+
 def bagging(X,Y,N,M,F):
 # 1. split your dataset into a test set and a "remainder set"
     x_remainder, x_test, y_r, y_test = myevaluation.train_test_split(X, Y)
@@ -684,10 +683,14 @@ def bagging(X,Y,N,M,F):
     best_trees = []
     for key in best_trees_dict:
         best_trees.append(forest[int(key)])
+
+    return best_trees
+
+def random_forest_predict(X_test, trees):
 # 4. using majority voting, make predictions from the M learners for each instance in the test set
     all_predictions = [] # [[predictions1],[predictions2]...]
-    for tree in best_trees:
-        pred = tree.predict(x_test)
+    for tree in trees:
+        pred = tree.predict(X_test)
         all_predictions.append(pred) #think about this like flipping a table
     #get the majority for every single row
     pred_header = build_header(all_predictions) #turn all predictions into a mypy
@@ -700,6 +703,6 @@ def bagging(X,Y,N,M,F):
         y_predict = vals[j]
         voted_predictions.append(y_predict)
 
-    forest_accuracy = get_accuracy(y_test, voted_predictions)
-    return best_trees, voted_predictions, forest_accuracy
+    # forest_accuracy = get_accuracy(y_test, voted_predictions)
+    return voted_predictions
 
