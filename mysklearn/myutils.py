@@ -21,15 +21,17 @@ from tabulate import tabulate
 # # uncomment once you paste your mypytable.py into mysklearn package
 
 
-# import mysklearn.myclassifiers
+import mysklearn.myclassifiers as my_class
 # importlib.reload(mysklearn.myclassifiers)
 # from mysklearn.myclassifiers import MyKNeighborsClassifier, MySimpleLinearRegressor
 
 # import mysklearn.myevaluation
 # importlib.reload(mysklearn.myevaluation)
-# import mysklearn.myevaluation as myevaluation
+import mysklearn.myevaluation as myevaluation
 
-
+def get_col(mypy, col_name):
+    return mypy.get_column(col_name, False)
+    
 def get_column(table, header, col_name):
     col_index = header.index(col_name)
     col = []
@@ -358,6 +360,7 @@ def entropy(p_class_labels):
 
 def select_attribute(instances, available_attributes, header):
     ##entropy
+    split_index = 0
     #get all possible class labels
     class_col = get_col_byindex(instances, -1)
     class_labels, counts = get_freq_str(class_col)
@@ -482,6 +485,61 @@ def tdidt(current_instances, available_attributes, attr_domains, header):
     
     return tree
 
+def compute_random_subset(values, num_values):
+    shuffled = values[:] # shallow copy 
+    random.shuffle(shuffled)
+    return sorted(shuffled[:num_values])
+
+def tdidt_random(current_instances, available_attributes, attr_domains, header, F):
+    
+    subset = compute_random_subset(available_attributes, F)
+    # select an attribute to split on
+    split_attribute = select_attribute(current_instances, subset, header)
+    # print("splitting on:", split_attribute)
+    available_attributes.remove(split_attribute)
+    new_atts = available_attributes
+    tree = ["Attribute", split_attribute]
+
+    # group data by attribute domains (creates pairwise disjoint partitions)
+    partitions = partition_instances(current_instances, split_attribute, attr_domains, header)
+    # for each partition, repeat unless one of the following occurs (base case)
+    for attribute_value, partition in partitions.items():
+        # print("working with partition for:", attribute_value)
+        value_subtree = ["Value", attribute_value]
+        #    CASE 1: all class labels of the partition are the same => make a leaf node
+        if len(partition) > 0 and all_same_class(partition):
+            # print("CASE 1")
+            #get the class label (the y_train val) 
+            label = partition[0][-1]
+            #append value_subtree with ["Leaf", class label,  num_of_instances, total_num]
+            value_subtree.append(["Leaf", label, len(partition), len(current_instances)])
+            tree.append(value_subtree)
+        #    CASE 2: no more attributes to select (clash) => handle clash w/majority vote leaf node
+        elif len(partition) > 0 and len(new_atts) == 0:
+            # print("CASE 2")
+            stats = compute_partition_stats(partition, -1)
+            stats.sort(key=lambda x: x[1])
+            label = stats[-1][0]
+            value_subtree.append(["Leaf", label, len(partition), len(current_instances)])
+            tree.append(value_subtree)
+        #    CASE 3: no more instances to partition (empty partition) => backtrack and replace attribute node with majority vote leaf node
+        elif len(partition) == 0:
+            # print("CASE 3")
+            stats = compute_partition_stats(current_instances, -1)
+            stats.sort(key=lambda x: x[1])
+            label = stats[-1][0]
+            return ["Leaf", label, len(partition), len(current_instances)]
+
+
+        else: # all base cases are false... recurse!!
+            subtree = tdidt_random(partition, new_atts, attr_domains, header, F)
+            #append subtree to value_subtree
+            value_subtree.append(subtree)
+            #after handling case append subtree to tree
+            tree.append(value_subtree)
+    
+    return tree
+
 def build_header(X_train):
     row = X_train[0]
     header =[]
@@ -528,15 +586,19 @@ def compute_partition_stats(instances, class_index):
         
     return stats_array
 
-
+# Partner Project
 def percent_to_rating(val):
     # low med high
-    if val <= 0.33:
+    if val <= 0.2:
+        return "very_low"
+    elif val <= 0.4:
         return "low"
-    elif val <= 0.66:
+    elif val <= 0.6:
         return "medium"
-    else:
+    elif val <= 0.8:
         return "high"
+    else:
+        return "very_high"
 
 def pop_rating(val):
     #low med high
@@ -546,3 +608,82 @@ def pop_rating(val):
         return "medium"
     else:
         return "high"
+
+def compute_bootstrapped_sample(x, y):
+    n = len(x)
+    x_sample = []
+    y_sample = []
+    for _ in range(n):
+        rand_index = random.randrange(0, n)
+        x_sample.append(x[rand_index])
+        y_sample.append(y[rand_index])
+    return x_sample, y_sample
+
+def best_M(M, d):# returns M biggest values from list
+    best = {}
+    for i in range(0, M):
+        high_val = 0
+        the_key = ""
+        for key in d:
+            #assuming we compare first elem
+            if  d[key] > high_val:
+                high_val = d[key]
+                the_key = key
+        best[the_key] = high_val
+        del d[the_key]
+
+    return best
+
+
+
+def bagging(X,Y,N,M,F):
+# 1. split your dataset into a test set and a "remainder set"
+    x_remainder, x_test, y_r, y_test = myevaluation.train_test_split(X, Y)
+# 2. using the remainder set, sample N bootsrap samples and use each one to build a classifier
+#    for each N sample:
+#        ~63% of the remainder set will be sampled into training set
+#        ~37% will be leftover for this tree's validation set
+    forest = []
+    # accuracies = [[0] for i in range(N)]
+    accuracies = {}
+    for i in range(N):
+        x_train, y_train = compute_bootstrapped_sample(x_remainder, y_r) #get the bootstrap sample
+        tree = my_class.MyDecisionTreeClassifier()
+        tree.fit(x_train, y_train, True, F) #build classifier
+        # get remainder of x_train and use as validation set
+        x_v = []
+        y_v = []
+        for j in range(len(x_remainder)):
+            if x_remainder[j] not in x_train:
+                x_v.append(x_remainder[j])
+                y_v.append(y_r[j])
+        pred = tree.predict(x_v)
+        accuracy = get_accuracy(y_v, pred)
+        accuracies[str(i)] = accuracy # {i: accuracy, }
+        forest.append(tree)
+    
+# 3. measure the performance of the tree on the validation set and select the best M of N
+#   trees based on the performance metrics
+    best_trees_dict = best_M(M, accuracies)
+    best_trees = []
+    for key in best_trees_dict:
+        best_trees.append(forest[int(key)])
+# 4. using majority voting, make predictions from the M learners for each instance in the test set
+    all_predictions = [] # [[predictions1],[predictions2]...]
+    for tree in best_trees:
+        pred = tree.predict(x_test)
+        all_predictions.append(pred) #think about this like flipping a table
+    #get the majority for every single row
+    pred_header = build_header(all_predictions) #turn all predictions into a mypy
+    pred_mypy = MyPyTable(pred_header, all_predictions)
+    voted_predictions = []
+    for i in range(len(all_predictions[0])): #loop through every x_test, create a column of predictions, pick the pred by majority rule
+        pred_col = pred_mypy.get_column(i)
+        vals, counts = get_freq_str(pred_col)
+        j = counts.index(max(counts)) 
+        y_predict = vals[j]
+        voted_predictions.append(y_predict)
+
+    forest_accuracy = get_accuracy(y_test, voted_predictions)
+    return best_trees, voted_predictions, forest_accuracy
+

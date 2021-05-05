@@ -1,5 +1,6 @@
 from mysklearn.mypytable import MyPyTable
 import mysklearn.myutils as myutils
+import itertools
 # using the "spotipy" library which is a python library that utilizes the Spotify API
 import spotipy 
 sp = spotipy.Spotify()
@@ -22,7 +23,7 @@ offs = 0
 results = sp.playlist_items(playlist_id, offset=offs) 
 tracks = results["items"]
 #loop through until 400 tracks
-while offs < 400: 
+while offs < 5000: 
     results = sp.playlist_items(playlist_id, offset=offs)
     tracks.extend(results["items"])
     offs += 100
