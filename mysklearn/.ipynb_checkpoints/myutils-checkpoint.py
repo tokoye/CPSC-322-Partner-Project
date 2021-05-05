@@ -42,7 +42,7 @@ def table_setUp(file_name):
 
 def get_col(mypy, col_name):
     return mypy.get_column(col_name, False)
-
+    
 def get_column(table, header, col_name):
     col_index = header.index(col_name)
     col = []
@@ -646,11 +646,7 @@ def best_M(M, d):# returns M biggest values from list
 
     return best
 
-def compute_corr_coef(x, y):
-    mean_x = np.mean(x)
-    mean_y = np.mean(y)
-    r = sum([(x[i] - mean_x) * (y[i] - mean_y) for i in range(len(x))]) / sum([((x[i] - mean_x)**2) * ((y[i] - mean_y)**2) for i in range(len(x))])
-    return r
+
 
 def bagging(X,Y,N,M,F):
 # 1. split your dataset into a test set and a "remainder set"
