@@ -1,3 +1,4 @@
+#heavily based on app from class
 import os
 import pickle
 import mysklearn.myutils as myutils

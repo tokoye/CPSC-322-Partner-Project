@@ -1,9 +1,10 @@
+#heavily based on app from class
 import pickle
 from mysklearn.myclassifiers import MyRandomForestClassifier
 from mysklearn.mypytable import MyPyTable
 import os
 
-fname = os.path.join("input_data", "tracks_data.txt")
+fname = os.path.join("input_data", "tracks_data_backup.txt")
 tracks = MyPyTable().load_from_file(fname)
 
 Danceability = tracks.get_column('danceability')

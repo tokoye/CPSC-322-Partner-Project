@@ -9,11 +9,10 @@ import numpy as np
 import importlib
 import copy
 import random
-import os
-# import mysklearn.mypytable
-# importlib.reload(mysklearn.mypytable)
+
 from mysklearn.mypytable import MyPyTable
 from tabulate import tabulate
+import os
 
 
 # # uncomment once you paste your mypytable.py into mysklearn package
@@ -705,4 +704,33 @@ def random_forest_predict(X_test, trees):
 
     # forest_accuracy = get_accuracy(y_test, voted_predictions)
     return voted_predictions
+
+def pie_chart_dataPrep(table, cols_to_plot):
+    """
+    """
+    totals_list = []
+    for col_name in cols_to_plot:
+        column_Category = MyPyTable.get_column(table, str(col_name))
+
+        total = 0
+        for val in column_Category:
+            total = total + float(val)
+        totals_list.append(total)
+    return totals_list
+
+
+def steal(column_Category, symbol, factor):
+    new_list = []
+    for col in column_Category:
+        new_list.append(float(col.strip(symbol))/factor)
+    return new_list
+
+def scatter_plotPrep(table, x, y):
+    m, b = compute_slope_intercept(x,y)
+    r = np.corrcoef(x,y)
+    regression = (r[0][1])
+    covar = np.cov(x,y)
+    covariance = (covar[0][1])
+    return float(m), float(b), float(regression), float(covariance)
+    
 
